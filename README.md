@@ -1,7 +1,7 @@
 # Microsoft Fabric Mini Project
 
 ## 📌 Project Overview
-This project demonstrates end-to-end data analytics of Newyork Taxi details using Microsoft Fabric.
+This project demonstrates end-to-end data analytics of Newyork Taxi details using Microsoft Fabric. I have used TLC Trip record data, stored in a Fabric Data Lakehouse, and transform it through staging and presentation layers using Data Factory activities, Dataflows, and Stored Procedures.
 
 ## 🛠 Tools Used
 - Microsoft Fabric
@@ -23,5 +23,7 @@ This project demonstrates end-to-end data analytics of Newyork Taxi details usin
 
 ## 📷 Dashboard Preview
 <img width="2142" height="1050" alt="image" src="https://github.com/user-attachments/assets/205e0048-3f8c-4705-a29d-b2c4dd8b8783" />
+
+
 
 
