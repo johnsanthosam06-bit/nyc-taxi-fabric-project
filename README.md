@@ -79,9 +79,9 @@ delete from stg.nyctaxi_yellow where stg.nyctaxi_yellow.tpep_pickup_datetime < @
 For the Stored Procedure Activity “SP Loading Staging Metadata”.
 
 Code to create the metadata.processing_log table.
-'''
-create schema metadata;
-'''
+
+```create schema metadata;```
+
 create table metadata.processing_log
 (
 	pipeline_run_id varchar(255), 
