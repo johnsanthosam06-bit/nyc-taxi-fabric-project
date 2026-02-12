@@ -39,7 +39,8 @@ Overall Pipeline
 Latest Processed Data
 For the Script Activity “Latest Processed Data”
 
-```select top 1 
+```
+select top 1 
 latest_processed_pickup 
 from metadata.processing_log 
 where table_processed = 'staging_nyctaxi_yellow'
@@ -49,7 +50,7 @@ order by latest_processed_pickup desc;
 ## v_date
 Pipeline expression for v_date Set Variable activity
 
-@formatDateTime(addToTime(activity('Latest Processed Date').output.resultSets[0].rows[0].latest_processed_pickup, 1, 'Month'), 'yyyy-MM')
+```@formatDateTime(addToTime(activity('Latest Processed Date').output.resultSets[0].rows[0].latest_processed_pickup, 1, 'Month'), 'yyyy-MM')```
 
 
 ## Copy to Staging
@@ -62,14 +63,15 @@ Pre Copy Script
 ## v_end_date
 Pipeline expression for v_end_date Set Variable activity
 
-@addToTime(concat(variables('v_date'), '-01'),1,'Month')
+```@addToTime(concat(variables('v_date'), '-01'),1,'Month')```
 
 ## SP Removing Outlier Dates
 For the Stored Procedure Activity “SP Removing Outlier Dates”.
 
 Create the Stored Procedure stg.data_cleaning_stg in the Data Warehouse using the code below.
 
-```CREATE procedure stg.stg_data_cleaning
+```
+CREATE procedure stg.stg_data_cleaning
 @startdate DATETIME2,
 @enddate DATETIME2
 as 
@@ -84,7 +86,8 @@ Code to create the metadata.processing_log table.
 
 ```create schema metadata;```
 
-```create table metadata.processing_log
+```
+create table metadata.processing_log
 (
 	pipeline_run_id varchar(255), 
 	table_processed varchar(255), 
@@ -95,7 +98,8 @@ Code to create the metadata.processing_log table.
 ```
 Created the Stored Procedure metadata.insert_staging_metadata in the Data Warehouse using the code below.
 
-```create procedure metadata.insert_processing_log
+```
+create procedure metadata.insert_processing_log
 @pipeline_run_id VARCHAR (255),
 @table_processed VARCHAR (255),
 @processed_date DATETIME2
