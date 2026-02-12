@@ -1,0 +1,82 @@
+{
+    "name": "pl_pres_presenation_nyctaxi",
+    "objectId": "dbddf132-18a6-4a76-853c-7286e92793fd",
+    "properties": {
+        "activities": [
+            {
+                "name": "process to presenation",
+                "type": "RefreshDataflow",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "dataflowId": "aaf0c663-7462-4679-b2eb-ac2e0251eebc",
+                    "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6",
+                    "notifyOption": "NoNotification",
+                    "dataflowType": "DataflowFabric"
+                }
+            },
+            {
+                "name": "SP Loading presentation metadata",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "process to presenation",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "storedProcedureName": "[metadata].[insert_presentation_metadata]",
+                    "storedProcedureParameters": {
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "processed_date": {
+                            "value": {
+                                "value": "@pipeline().TriggerTime",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        },
+                        "table_name": {
+                            "value": "presenatation_nyctaxi_yellow",
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedService": {
+                    "name": "nyctaxi_warehouse",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                            "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                        }
+                    }
+                }
+            }
+        ],
+        "lastModifiedByObjectId": "15155948-d28d-496b-b759-aaaebbd031ad",
+        "lastPublishTime": "2026-02-11T14:46:04Z"
+    }
+}

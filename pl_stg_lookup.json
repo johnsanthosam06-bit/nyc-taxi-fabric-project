@@ -1,0 +1,101 @@
+{
+    "name": "pl_stg_lookup",
+    "objectId": "cfd9b364-1e1e-4b6f-b873-01c683dbd8f2",
+    "properties": {
+        "activities": [
+            {
+                "name": "Copy lookup table",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "DelimitedTextSource",
+                        "storeSettings": {
+                            "type": "LakehouseReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "DelimitedTextReadSettings"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "connectionSettings": {
+                                "name": "taxi_lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6",
+                                        "artifactId": "f2c4e8d5-1a90-42c3-bfa1-5068fe30adca",
+                                        "rootFolder": "Files"
+                                    },
+                                    "externalReferences": {
+                                        "connection": "5914b554-140e-44b0-9cee-a14dc63de4b4"
+                                    }
+                                }
+                            },
+                            "type": "DelimitedText",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "taxi_zone_lookup.csv",
+                                    "folderPath": "nyctaxi_lookup_zones"
+                                },
+                                "columnDelimiter": ",",
+                                "escapeChar": "\\",
+                                "firstRowAsHeader": true,
+                                "quoteChar": "\""
+                            },
+                            "schema": []
+                        }
+                    },
+                    "sink": {
+                        "type": "DataWarehouseSink",
+                        "allowCopyCommand": true,
+                        "tableOption": "autoCreate",
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "nyctaxi_warehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "DataWarehouse",
+                                    "typeProperties": {
+                                        "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                                        "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                                        "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                                    }
+                                }
+                            },
+                            "type": "DataWarehouseTable",
+                            "schema": [],
+                            "typeProperties": {
+                                "schema": "stg",
+                                "table": "taxi_zone_lookup"
+                            }
+                        }
+                    },
+                    "enableStaging": true,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                }
+            }
+        ],
+        "lastModifiedByObjectId": "15155948-d28d-496b-b759-aaaebbd031ad",
+        "lastPublishTime": "2026-02-11T06:44:06Z"
+    }
+}

@@ -1,0 +1,304 @@
+{
+    "name": "pl_stg_processing_nyctaxi",
+    "objectId": "30e7ae4b-b27d-4dda-a46d-63b282f744af",
+    "properties": {
+        "activities": [
+            {
+                "name": "Copy to staging",
+                "type": "Copy",
+                "dependsOn": [
+                    {
+                        "activity": "v_date",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "ParquetSource",
+                        "storeSettings": {
+                            "type": "LakehouseReadSettings",
+                            "recursive": true,
+                            "enablePartitionDiscovery": false
+                        },
+                        "formatSettings": {
+                            "type": "ParquetReadSettings"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "connectionSettings": {
+                                "name": "taxi_lakehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6",
+                                        "artifactId": "f2c4e8d5-1a90-42c3-bfa1-5068fe30adca",
+                                        "rootFolder": "Files"
+                                    },
+                                    "externalReferences": {
+                                        "connection": "5914b554-140e-44b0-9cee-a14dc63de4b4"
+                                    }
+                                }
+                            },
+                            "type": "Parquet",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": {
+                                        "value": "@concat('yellow_tripdata_',variables('v_date'),'.parquet')",
+                                        "type": "Expression"
+                                    },
+                                    "folderPath": "nyctaxi_yellow"
+                                },
+                                "compressionCodec": "snappy"
+                            },
+                            "schema": []
+                        }
+                    },
+                    "sink": {
+                        "type": "DataWarehouseSink",
+                        "preCopyScript": "delete from stg.nyctaxi_yellow",
+                        "allowCopyCommand": true,
+                        "disableMetricsCollection": false,
+                        "datasetSettings": {
+                            "annotations": [],
+                            "linkedService": {
+                                "name": "nyctaxi_warehouse",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "DataWarehouse",
+                                    "typeProperties": {
+                                        "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                                        "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                                        "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                                    }
+                                }
+                            },
+                            "type": "DataWarehouseTable",
+                            "schema": [],
+                            "typeProperties": {
+                                "schema": "stg",
+                                "table": "nyctaxi_yellow"
+                            }
+                        }
+                    },
+                    "enableStaging": true,
+                    "translator": {
+                        "type": "TabularTranslator",
+                        "typeConversion": true,
+                        "typeConversionSettings": {
+                            "allowDataTruncation": true,
+                            "treatBooleanAsNumber": false
+                        }
+                    }
+                }
+            },
+            {
+                "name": "removing outliners dates",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "v_end_date",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "storedProcedureName": "[stg].[stg_data_cleaning]",
+                    "storedProcedureParameters": {
+                        "enddate": {
+                            "value": {
+                                "value": "@variables('v_end_date')",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        },
+                        "startdate": {
+                            "value": {
+                                "value": "@concat(variables('v_date'),'-01')",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        }
+                    }
+                },
+                "linkedService": {
+                    "name": "nyctaxi_warehouse",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                            "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "v_end_date",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "Copy to staging",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "v_end_date",
+                    "value": {
+                        "value": "@addToTime(concat(variables('v_date'),'-01'),1,'Month')",
+                        "type": "Expression"
+                    }
+                }
+            },
+            {
+                "name": "SP loading processed logs",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "removing outliners dates",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "storedProcedureName": "[metadata].[insert_processing_log]",
+                    "storedProcedureParameters": {
+                        "pipeline_run_id": {
+                            "value": {
+                                "value": "@pipeline().RunId",
+                                "type": "Expression"
+                            },
+                            "type": "String"
+                        },
+                        "processed_date": {
+                            "value": {
+                                "value": "@pipeline().TriggerTime",
+                                "type": "Expression"
+                            },
+                            "type": "DateTime"
+                        },
+                        "table_processed": {
+                            "value": "staging_nyctaxi_yellow",
+                            "type": "String"
+                        }
+                    }
+                },
+                "linkedService": {
+                    "name": "nyctaxi_warehouse",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                            "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "latest_processed_data",
+                "type": "Script",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "linkedService": {
+                    "name": "nyctaxi_warehouse",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "qhvzke2xdnoullakpxexgyovza-fsm4cmpebrhejc6rewr2xig42y.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "e2dff097-9a16-4a73-b1ef-d17ad2703abb",
+                            "workspaceId": "31c1992c-0ce4-444e-8bd1-25a3aba0dcd6"
+                        }
+                    }
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "select top 1 latest_processed_pickup\nfrom metadata.processing_log\n\nwhere table_processed = 'staging_nyctaxi_yellow'\n\norder by latest_processed_pickup desc;",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            },
+            {
+                "name": "v_date",
+                "type": "SetVariable",
+                "dependsOn": [
+                    {
+                        "activity": "latest_processed_data",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "v_date",
+                    "value": {
+                        "value": "@formatDateTime(addToTime(activity('latest_processed_data').output.resultSets[0].rows[0].latest_processed_pickup,1,'Month'),'yyyy-MM')",
+                        "type": "Expression"
+                    }
+                }
+            }
+        ],
+        "variables": {
+            "v_date": {
+                "type": "String",
+                "defaultValue": "2025-01"
+            },
+            "v_end_date": {
+                "type": "String"
+            }
+        },
+        "lastModifiedByObjectId": "15155948-d28d-496b-b759-aaaebbd031ad",
+        "lastPublishTime": "2026-02-11T14:31:07Z"
+    }
+}

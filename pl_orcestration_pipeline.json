@@ -1,0 +1,47 @@
+{
+    "name": "pl_orchestration",
+    "objectId": "eac4eb5d-93e5-4ddf-a6af-c28bd0c4f809",
+    "properties": {
+        "activities": [
+            {
+                "name": "Invoke staging pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "30e7ae4b-b27d-4dda-a46d-63b282f744af",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            },
+            {
+                "name": "Invoke presentation pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [
+                    {
+                        "activity": "Invoke staging pipeline",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "dbddf132-18a6-4a76-853c-7286e92793fd",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            }
+        ],
+        "lastModifiedByObjectId": "15155948-d28d-496b-b759-aaaebbd031ad",
+        "lastPublishTime": "2026-02-11T14:11:55Z"
+    }
+}
